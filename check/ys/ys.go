@@ -88,9 +88,7 @@ func (ys *YS) Check(ctx context.Context) (check.Message, error) {
 	}
 
 	for _, role := range ys.checks.infos {
-		role.SignInfo.Status = "✅ Signed"
-
-		if !isSign(role.Today) &&
+		if !isSign(role.Today) ||
 			!role.SignInfo.IsSign {
 
 			role.SignInfo.Today = time.Now()
@@ -104,7 +102,9 @@ func (ys *YS) Check(ctx context.Context) (check.Message, error) {
 
 			role.SignInfo.IsSign = true
 			role.SignInfo.TotalSignDay++
-			role.SignInfo.Status = status
+			role.SignInfo.Status = "✅ " + status
+		} else {
+			role.SignInfo.Status = "✅ Signed"
 		}
 	}
 
