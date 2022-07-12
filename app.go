@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"time"
 
 	"github.com/togls/gi-helper/check"
+	"github.com/togls/gi-helper/log"
 	"github.com/togls/gi-helper/notify"
 )
 
@@ -42,6 +42,8 @@ func (app *Application) run(ctx context.Context) error {
 	tick := time.After(d)
 	once := time.After(1 * time.Second)
 
+	log.Info().Msgf("check will run at %s every day", checkTime)
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -50,21 +52,24 @@ func (app *Application) run(ctx context.Context) error {
 		case <-tick:
 			tick = time.After(24 * time.Hour)
 		}
+		log.Info().Msg("run check")
 
 		for _, c := range app.cs {
 			msg, err := c.Check(ctx)
 			if err != nil {
-				fmt.Printf("check error: %s\n", err)
+				log.Err(err).Msg("check")
 				continue
 			}
 
 			for _, n := range app.ns {
 				err := n.Notify(ctx, msg)
 				if err != nil {
-					fmt.Printf("notify error: %s\n", err)
+					log.Err(err).Msg("notify")
 					continue
 				}
 			}
 		}
+
+		log.Info().Msg("check done")
 	}
 }
