@@ -16,6 +16,7 @@ import (
 
 	"github.com/togls/gi-helper/check"
 	cc "github.com/togls/gi-helper/context"
+	"github.com/togls/gi-helper/log"
 )
 
 const (
@@ -97,6 +98,10 @@ func (ys *YS) Check(ctx context.Context) (check.Message, error) {
 			if err != nil {
 				role.SignInfo.Status = "❌ Failed to check-in"
 				ys.checks.fails++
+				log.Err(err).
+					Str("uid", role.GameUid).
+					Str("nickname", role.Nickname).
+					Msg("post sign")
 				continue
 			}
 
