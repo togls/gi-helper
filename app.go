@@ -54,7 +54,7 @@ func (app *Application) run(ctx context.Context) error {
 		}
 		log.Info().Msg("run check")
 
-		for _, c := range app.cs {
+		for i, c := range app.cs {
 			msg, err := c.Check(ctx)
 			if err != nil {
 				log.Err(err).Msg("check")
@@ -68,8 +68,37 @@ func (app *Application) run(ctx context.Context) error {
 					continue
 				}
 			}
+
+			if sc, ok := c.(check.SpecifiedChecker); ok {
+				app.cs = append(app.cs[:i], app.cs[i+1:]...)
+				go app.RunSpecChecker(ctx, sc)
+			}
 		}
 
 		log.Info().Msg("check done")
+	}
+}
+
+func (app *Application) RunSpecChecker(ctx context.Context, sc check.SpecifiedChecker) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-sc.Next():
+		}
+
+		msg, err := sc.Check(ctx)
+		if err != nil {
+			log.Err(err).Msg("spec check")
+			continue
+		}
+
+		for _, n := range app.ns {
+			err := n.Notify(ctx, msg)
+			if err != nil {
+				log.Err(err).Msg("spec check notify")
+				continue
+			}
+		}
 	}
 }

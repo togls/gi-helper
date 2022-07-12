@@ -2,6 +2,7 @@ package check
 
 import (
 	"context"
+	"time"
 )
 
 type Message interface {
@@ -11,4 +12,9 @@ type Message interface {
 
 type Checker interface {
 	Check(ctx context.Context) (msg Message, err error)
+}
+
+type SpecifiedChecker interface {
+	Checker
+	Next() <-chan time.Time
 }
