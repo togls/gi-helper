@@ -54,9 +54,12 @@ func (app *Application) run(ctx context.Context) error {
 		}
 		log.Info().Msg("run check")
 
+		retry := make([]check.Checker, 0)
+
 		for i, c := range app.cs {
 			msg, err := c.Check(ctx)
 			if err != nil {
+				retry = append(retry, c)
 				log.Err(err).Msg("check")
 				continue
 			}
@@ -73,6 +76,10 @@ func (app *Application) run(ctx context.Context) error {
 				app.cs = append(app.cs[:i], app.cs[i+1:]...)
 				go app.RunSpecChecker(ctx, sc)
 			}
+		}
+
+		if len(retry) > 0 {
+			go app.retry(ctx, retry)
 		}
 
 		log.Info().Msg("check done")
@@ -101,4 +108,43 @@ func (app *Application) RunSpecChecker(ctx context.Context, sc check.SpecifiedCh
 			}
 		}
 	}
+}
+
+func (app *Application) retry(ctx context.Context, list []check.Checker) {
+	tick := time.After(5 * time.Second)
+
+	for i := 0; i < 5; i++ {
+		select {
+		case <-ctx.Done():
+			return
+		case <-tick:
+		}
+
+		for i, c := range list {
+			msg, err := c.Check(ctx)
+			if err != nil {
+				log.Err(err).Msg("check")
+				continue
+			}
+
+			list = append(list[:i], list[i+1:]...)
+
+			for _, n := range app.ns {
+				err := n.Notify(ctx, msg)
+				if err != nil {
+					log.Err(err).Msg("notify")
+					continue
+				}
+			}
+		}
+
+		if len(list) == 0 {
+			log.Info().Msg("retry done")
+			return
+		}
+
+		tick = time.After(5 * time.Second)
+	}
+
+	log.Info().Int("count", len(list)).Msg("retry timeout")
 }
