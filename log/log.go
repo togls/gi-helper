@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"github.com/rs/zerolog"
 )
@@ -25,6 +26,8 @@ func defaultLogger() zerolog.Logger {
 	}
 
 	out := zerolog.NewConsoleWriter()
+
+	out.TimeFormat = time.RFC3339
 
 	return zerolog.New(out).
 		Level(level).
