@@ -29,9 +29,7 @@ func main() {
 
 	ctx = cc.WithClient(ctx, &http.Client{})
 
-	if err := app.run(ctx); err != nil {
-		log.Fatal().Err(err).Msg("app run")
-	}
+	app.Run(ctx)
 
 	<-ctx.Done()
 
