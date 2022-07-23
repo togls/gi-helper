@@ -34,4 +34,8 @@ func main() {
 	}
 
 	<-ctx.Done()
+
+	if err := ctx.Err(); err != nil {
+		log.Fatal().Err(err).Msg("context error")
+	}
 }

@@ -2,10 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 
 	"github.com/togls/gi-helper/check/ys"
+	"github.com/togls/gi-helper/log"
 	"github.com/togls/gi-helper/notify"
 )
 
@@ -44,7 +44,7 @@ func parseConfig(path string) (*Application, error) {
 
 			app.ns = append(app.ns, notify.NewTGNotifier(token, userID))
 		default:
-			fmt.Printf("unknown notify type: %s\n", n.Type)
+			log.Info().Str("type", n.Type).Msg("unknown notify type")
 		}
 	}
 
